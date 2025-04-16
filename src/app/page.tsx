@@ -54,9 +54,11 @@ export default function Home() {
   }, []);
 
   return (
+    <div><h1>Hello</h1>
     <canvas
       ref={canvasRef}
       className="fixed top-0 left-0 w-screen h-screen"
     />
+    </div>  
   );
 }
