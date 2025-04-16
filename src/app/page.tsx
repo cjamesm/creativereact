@@ -1,55 +1,64 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import * as THREE from 'three'; // Import the THREE namespace
+import React from 'react';
+import { useEffect, useRef } from 'react';
 
-// Define the type for the props of the Box component
-interface BoxProps {
-  position: [number, number, number];
-}
+export default function Home() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-function Box(props: BoxProps) {
-  // This reference gives us direct access to the THREE.Mesh object
-  const ref = useRef<THREE.Mesh>(null);
-  // Hold state for hovered and clicked events
-  const [hovered, setHovered] = useState(false);
-  const [clicked, setClicked] = useState(false);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-  // Subscribe this component to the render-loop, rotate the mesh every frame
-  useFrame((state, delta) => {
-    if (ref.current) {
-      ref.current.rotation.x += delta;
-    }
-  });
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-  // Return the view, these are regular Three.js elements expressed in JSX
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    const dots = Array.from({ length: 100 }).map(() => ({
+      r: Math.random() * 100 + 50,
+      angle: Math.random() * Math.PI * 2,
+      speed: Math.random() * 0.01 + 0.005,
+      size: Math.random() * 3 + 1,
+      color: `hsl(${Math.random() * 360}, 100%, 70%)`
+    }));
+
+    const animate = () => {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.fillRect(0, 0, width, height);
+
+      dots.forEach(dot => {
+        dot.angle += dot.speed;
+        const x = width / 2 + Math.cos(dot.angle) * dot.r;
+        const y = height / 2 + Math.sin(dot.angle) * dot.r;
+
+        ctx.beginPath();
+        ctx.arc(x, y, dot.size, 0, Math.PI * 2);
+        ctx.fillStyle = dot.color;
+        ctx.fill();
+      });
+
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    const handleResize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <mesh
-      {...props}
-      ref={ref}
-      scale={clicked ? 1.5 : 1}
-      onClick={() => setClicked(!clicked)}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-    >
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={hovered ? 'hotpink' : 'orange'} />
-    </mesh>
-  );
-}
-
-export default function Page() {
-  return (
-    <div>
-      <h1>Hello</h1>
-    <Canvas>
-      <ambientLight intensity={Math.PI / 2} />
-      <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} decay={0} intensity={Math.PI} />
-      <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
-      <Box position={[-1.2, 0, 0]} />
-      <Box position={[1.2, 0, 0]} />
-    </Canvas>
-    </div>
+    <div><h1>Hello</h1>
+    <canvas
+      ref={canvasRef}
+      className="fixed top-0 left-0 w-screen h-screen"
+    />
+    </div>  
   );
 }
